@@ -61,6 +61,39 @@ async function run() {
             });
         })
 
+        app.get("/searchproducts", async (req, res) => {
+            const searchQuery = req.query.product_name;
+            const page = parseInt(req.query.page) || 1;
+            const pageSize = parseInt(req.query.pageSize) || 10;
+        
+            const query = {
+                name: { $regex: searchQuery, $options: "i" }
+            };
+        
+            const allResults = await productsCollection.find(query).toArray();
+            const totalResults = allResults.length;
+            const totalPages = Math.ceil(totalResults / pageSize);
+            const paginatedResults = allResults.slice((page - 1) * pageSize, page * pageSize);
+        
+            res.json({
+                result: paginatedResults,
+                totalPages,
+                currentPage: page,
+                totalResults
+            });
+        });
+
+        app.get("/searchCatagory",async (req, res) => {
+            const { brand_name, category_name, price_range } = req.query;
+            // console.log(brand_name, category_name, price_range);
+            const query={$or:[{Brand_Name:brand_name},{Category_Name:category_name},{Price_Range:price_range}]}
+
+            const result = await productsCollection.find(query).toArray();
+            res.send(result);
+            console.log(result.length)
+        })
+        
+
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } catch (err) {
         console.error("Failed to connect to MongoDB", err);
